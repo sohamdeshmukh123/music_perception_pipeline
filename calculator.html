@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Musical pleasantness predictor</title>
+<style>
+  body { font-family: -apple-system, sans-serif; max-width: 560px; margin: 60px auto; padding: 0 20px; color: #1a1a1a; }
+  h1 { font-size: 20px; font-weight: 600; }
+  p.sub { color: #666; font-size: 14px; margin-top: -8px; }
+  input { width: 100%; font-family: monospace; font-size: 15px; padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; margin-top: 6px; }
+  label { font-size: 13px; color: #555; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0; }
+  .card { background: #f4f4f4; border-radius: 8px; padding: 10px 12px; }
+  .card p:first-child { font-size: 11px; color: #666; margin: 0 0 4px; }
+  .card p:last-child { font-size: 17px; font-weight: 600; margin: 0; }
+  .pred-box { background: #eef2ff; border-radius: 10px; padding: 16px 18px; }
+  .pred-value { font-size: 28px; font-weight: 700; margin: 4px 0 12px; }
+  .track { position: relative; height: 6px; background: #d8dcf0; border-radius: 3px; }
+  .marker { position: absolute; top: -5px; width: 12px; height: 12px; border-radius: 50%; background: #4338ca; transform: translateX(-50%); }
+  .scale-labels { display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-top: 4px; }
+  .warning { background: #fff3f0; border: 1px solid #f3c6ba; color: #a13a1f; font-size: 13px; padding: 10px 12px; border-radius: 6px; margin: 12px 0; display: none; }
+</style>
+</head>
+<body>
+  <h1>Musical pleasantness predictor</h1>
+  <p class="sub">Based on the fitted transition-entropy model from the study.</p>
+
+  <label for="seq">Note sequence (space-separated)</label>
+  <input id="seq" type="text" value="C D E F G A B G F E">
+  <p class="sub" style="font-size:12px; margin-top:6px;">Valid notes: C, C#, D, D#, E, F, F#, G, G#, A, A#, B (flats like Db also work)</p>
+
+  <div class="warning" id="warning"></div>
+  <div class="grid" id="grid"></div>
+
+  <div class="pred-box">
+    <p style="font-size:13px;color:#555;margin:0;">Predicted pleasantness</p>
+    <p class="pred-value" id="predValue">-</p>
+    <div class="track"><div class="marker" id="marker"></div></div>
+    <div class="scale-labels"><span>0</span><span>study range: 5.77 – 8.26</span><span>10</span></div>
+  </div>
+
+<script>
+const INTERCEPT = 6.49;
+const COEF_H1 = 2.67;
+const noteMap = {C:0,"C#":1,Db:1,D:2,"D#":3,Eb:3,E:4,F:5,"F#":6,Gb:6,G:7,"G#":8,Ab:8,A:9,"A#":10,Bb:10,B:11};
+
+function computeEntropy(seq) {
+  const counts = {};
+  seq.forEach(s => counts[s] = (counts[s] || 0) + 1);
+  const n = seq.length;
+  let H = 0;
+  Object.values(counts).forEach(cnt => { const p = cnt / n; H -= p * Math.log2(p); });
+  return H;
+}
+
+function computeTransitionEntropy(seq) {
+  const contexts = {};
+  for (let t = 0; t < seq.length - 1; t++) {
+    const a = seq[t], b = seq[t + 1];
+    if (!contexts[a]) contexts[a] = [];
+    contexts[a].push(b);
+  }
+  const total = seq.length - 1;
+  let H1 = 0;
+  Object.values(contexts).forEach(nexts => {
+    const pCtx = nexts.length / total;
+    const counts = {};
+    nexts.forEach(x => counts[x] = (counts[x] || 0) + 1);
+    let Hcond = 0;
+    Object.values(counts).forEach(cnt => { const p = cnt / nexts.length; Hcond -= p * Math.log2(p); });
+    H1 += pCtx * Hcond;
+  });
+  return H1;
+}
+
+function computeSymmetry(seq) {
+  const rev = [...seq].reverse();
+  let hamming = 0;
+  for (let i = 0; i < seq.length; i++) { if (seq[i] !== rev[i]) hamming++; }
+  return 1 - (hamming / seq.length);
+}
+
+function lz76FactorCount(seq) {
+  let i = 0, l = 1, c = 0;
+  const n = seq.length;
+  const substrings = new Set();
+  while (true) {
+    if (i + l > n) break;
+    const substr = seq.slice(i, i + l).join(",");
+    if (substrings.has(substr)) { l += 1; }
+    else { substrings.add(substr); i += l; l = 1; c += 1; }
+  }
+  return c;
+}
+
+function computeLZ(seq) {
+  const n = seq.length;
+  const c = lz76FactorCount(seq);
+  return c * Math.log2(n) / n;
+}
+
+function card(label, value) {
+  const d = document.createElement("div");
+  d.className = "card";
+  d.innerHTML = `<p>${label}</p><p>${value}</p>`;
+  return d;
+}
+
+function render() {
+  const raw = document.getElementById("seq").value.trim();
+  const grid = document.getElementById("grid");
+  const warningBox = document.getElementById("warning");
+  grid.innerHTML = "";
+  warningBox.style.display = "none";
+
+  if (!raw) {
+    document.getElementById("predValue").textContent = "-";
+    return;
+  }
+
+  const seq = raw.split(/\s+/);
+  const invalid = [...new Set(seq.filter(n => !(n in noteMap)))];
+
+  if (invalid.length > 0) {
+    warningBox.style.display = "block";
+    warningBox.textContent = "Not a recognized note: " + invalid.join(", ") + ". Use C, C#, D, D#, E, F, F#, G, G#, A, A#, B (or flats like Db).";
+    document.getElementById("predValue").textContent = "-";
+    document.getElementById("marker").style.left = "0%";
+    return;
+  }
+
+  const H0 = computeEntropy(seq);
+  const H1 = seq.length > 1 ? computeTransitionEntropy(seq) : 0;
+  const LZ = computeLZ(seq);
+  const sym = computeSymmetry(seq);
+  const pred = INTERCEPT + COEF_H1 * H1;
+
+  grid.appendChild(card("Shannon entropy H0", H0.toFixed(2)));
+  grid.appendChild(card("Transition entropy H1", H1.toFixed(2)));
+  grid.appendChild(card("Lempel-Ziv complexity", LZ.toFixed(2)));
+  grid.appendChild(card("Symmetry", sym.toFixed(2)));
+
+  document.getElementById("predValue").textContent = pred.toFixed(2) + " / 10";
+  const pct = Math.max(0, Math.min(100, (pred / 10) * 100));
+  document.getElementById("marker").style.left = pct + "%";
+}
+
+document.getElementById("seq").addEventListener("input", render);
+render();
+</script>
+</body>
+</html>
