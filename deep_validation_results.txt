@@ -1,0 +1,39 @@
+=== 3.3.4 Exact permutation test ===
+Observed Spearman r(H1, pleasantness) = 0.940
+Exact two-sided permutation p-value (9! = 362880 relabelings): 0.00066
+(paper reports p = .00066)
+
+=== 3.3.5 Bootstrap CIs (20,000 resamples) ===
+Slope beta = 2.688, 95% bootstrap CI [1.70, 3.75]
+Intercept = 6.495, 95% bootstrap CI [6.06, 6.92]
+In-sample R^2 95% bootstrap CI [0.53, 0.98]
+Slope positive in 100.0% of resamples
+(paper reports slope 95% CI [1.70, 3.75], intercept 95% CI [6.06, 6.93], R2 CI [0.53, 0.98], 100% positive)
+
+=== 3.3.6 Systematic per-feature LOOCV comparison (Table 5) ===
+ Feature  In-sample R2  LOOCV R2  LOOCV MAE
+      H1         0.789     0.662      0.273
+      H0         0.099    -0.633      0.735
+      LZ         0.022    -0.773      0.784
+Symmetry         0.001    -0.812      0.788
+(paper Table 5: H1 .789/.661/.273; LZ .190/-.299/.673; H0 .099/-.633/.735; Symmetry .001/-.813/.788)
+
+=== 3.3.7 Simulation-based power analysis (Table 6) ===
+Data-generating process: slope=2.675, intercept=6.488, residual SD=0.374
+  N  Mean CV R2 (simulated)  SD of CV R2
+  9                   0.416        0.351
+ 15                   0.542        0.191
+ 25                   0.591        0.131
+ 50                   0.623        0.077
+100                   0.641        0.056
+200                   0.648        0.036
+(paper Table 6: N=9 mean=.592 sd=.278; N=200 mean=.758 sd=.026)
+
+=== 3.3.8 Bayesian linear model + Gaussian Process (Table 7) ===
+Bayesian posterior mean slope = 2.600, 95% credible interval [1.59, 3.61]
+(paper reports posterior slope 2.223, 95% CI [0.43, 4.02])
+                           Model  LOOCV R2  LOOCV MAE
+               OLS (frequentist)     0.662      0.273
+Bayesian linear (posterior mean)     0.665      0.276
+   Gaussian Process (RBF kernel)     0.423      0.407
+(paper Table 7: OLS .661/.273; Bayesian .635/.325; GP .390/.416)

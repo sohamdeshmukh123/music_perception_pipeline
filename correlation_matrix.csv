@@ -1,0 +1,5 @@
+Feature,Pleasantness_mean_r,Pleasantness_mean_p,Stability_mean_r,Stability_mean_p,Restlessness_mean_r,Restlessness_mean_p
+H0,0.269,0.4841,0.103,0.7929,-0.252,0.5128
+H1,0.94,0.0002,0.629,0.0698,-0.862,0.0028
+LZ,0.068,0.863,0.086,0.8262,-0.008,0.9828
+Symmetry,-0.168,0.6648,0.045,0.9083,0.204,0.5987

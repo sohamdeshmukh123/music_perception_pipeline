@@ -1,0 +1,10 @@
+Clip,Actual,LOOCV_Predicted,Residual
+Pattern,6.48,6.49,-0.01
+Pattern Break,7.55,7.776,-0.226
+Symmetry,8.26,8.281,-0.021
+Symmetry Break,7.48,7.365,0.115
+Sequence,7.65,7.683,-0.033
+Sequence Break,7.39,7.044,0.346
+Fifth Ratio,7.06,6.326,0.734
+Tritone Ratio,5.77,6.691,-0.921
+Random,6.45,6.499,-0.049

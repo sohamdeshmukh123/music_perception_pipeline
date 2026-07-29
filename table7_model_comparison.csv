@@ -1,0 +1,4 @@
+Model,LOOCV R2,LOOCV MAE
+OLS (frequentist),0.662,0.273
+Bayesian linear (posterior mean),0.665,0.276
+Gaussian Process (RBF kernel),0.423,0.407

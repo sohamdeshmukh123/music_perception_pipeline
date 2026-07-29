@@ -1,0 +1,10 @@
+Clip,Pleasantness_mean,Pleasantness_std,Stability_mean,Stability_std,Restlessness_mean,Restlessness_std
+Pattern,6.48,1.75,6.81,2.06,4.42,2.5
+Pattern Break,7.55,1.59,6.77,2.01,4.16,2.33
+Symmetry,8.26,1.48,7.68,1.47,3.32,2.26
+Symmetry Break,7.48,1.79,7.13,1.8,4.06,2.43
+Sequence,7.65,1.89,7.48,1.79,4.0,2.72
+Sequence Break,7.39,2.01,6.81,2.29,4.58,2.36
+Fifth Ratio,7.06,2.26,6.81,2.34,4.61,2.65
+Tritone Ratio,5.77,2.7,6.48,2.9,5.68,2.77
+Random,6.45,2.61,5.87,2.97,5.55,2.84
